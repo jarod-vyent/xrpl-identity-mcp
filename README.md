@@ -1,6 +1,7 @@
 # xrpl-identity-mcp
 
 [![CI](https://github.com/jarod-vyent/xrpl-identity-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/jarod-vyent/xrpl-identity-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 `xrpl-identity-mcp` is the first identity-focused MCP server for the XRP Ledger: DIDs ([XLS-40](https://github.com/XRPLF/XRPL-Standards/tree/master/XLS-0040-decentralized-identity)), credentials ([XLS-70](https://github.com/XRPLF/XRPL-Standards/tree/master/XLS-0070-credentials)), multisig signer lists, and safe transaction prepare/verify/submit workflows. It prepares unsigned transactions, reads ledger state, verifies signed blobs against intent, and can submit pre-signed blobs without ever taking custody of keys.
 
