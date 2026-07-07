@@ -44,7 +44,7 @@ export function registerDidTools(server: McpServer): void {
     {
       title: 'Resolve XRPL DID',
       description:
-        'Resolve an XLS-40 DID object for an XRPL account or did:xrpl identifier. Returns raw ledger data, UTF-8 decoded DID fields where valid, and fetched DID document content for ipfs:// or https:// URIs.',
+        'Resolve an XLS-40 DID object for an XRPL account or did:xrpl identifier. Returns raw ledger data, UTF-8 decoded DID fields where valid, and fetched DID document content for ipfs:// or https:// URIs. Only text/JSON documents are inlined; binary content is reported as metadata (source, content type, byte length) with the body omitted.',
       inputSchema: {
         address: addressSchema.describe(
           'Classic XRPL address, did:xrpl:<address>, or did:xrpl:1:<address>.',
@@ -119,8 +119,14 @@ export async function resolveDid(
     if (typeof uri === 'string' && canFetchDocumentUri(uri)) {
       try {
         const fetched = await fetchDidDocument(uri)
-        result.document = fetched.document
+        if (fetched.document !== undefined) {
+          result.document = fetched.document
+        }
+        if (fetched.documentSkipped !== undefined) {
+          result.documentSkipped = fetched.documentSkipped
+        }
         result.documentSource = fetched.source
+        result.documentByteLength = fetched.byteLength
         if (fetched.contentType) {
           result.documentContentType = fetched.contentType
         }

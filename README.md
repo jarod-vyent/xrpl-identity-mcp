@@ -79,7 +79,7 @@ Resolve a DID and read its document:
 
 1. Call `did_resolve` with `address` set to a classic XRPL address or `did:xrpl:<address>`.
 2. Inspect `decoded.URI`, `decoded.Data`, and `decoded.DIDDocument`.
-3. If the URI is `ipfs://` or `https://`, inspect `document` and `documentSource`.
+3. If the URI is `ipfs://` or `https://`, inspect `document` and `documentSource`. Only text and JSON documents are inlined; binary content (for example an image) is reported as `documentSource`, `documentContentType`, and `documentByteLength` with `documentSkipped` explaining why the body was omitted.
 
 Issue and accept a credential on testnet:
 

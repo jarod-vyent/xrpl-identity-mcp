@@ -15,8 +15,10 @@ const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
 
 export interface FetchedDocument {
   source: string
-  document: unknown
+  document?: unknown
+  documentSkipped?: string
   contentType?: string
+  byteLength: number
 }
 
 /**
@@ -97,12 +99,28 @@ async function fetchWithLimits(initialUrl: string): Promise<FetchedDocument> {
       }
 
       const bytes = await readLimited(response)
-      const text = Buffer.concat(bytes).toString('utf8')
-      return {
+      const buffer = Buffer.concat(bytes)
+      const result: FetchedDocument = {
         source: url.toString(),
-        document: parseJsonOrText(text),
         contentType: response.headers.get('content-type') ?? undefined,
+        byteLength: buffer.byteLength,
       }
+
+      if (!isInlineableContentType(result.contentType)) {
+        result.documentSkipped =
+          'Content type is not text or JSON; document body omitted.'
+        return result
+      }
+
+      const text = decodeUtf8Strict(buffer)
+      if (text === undefined) {
+        result.documentSkipped =
+          'Content is not valid UTF-8 text; document body omitted.'
+        return result
+      }
+
+      result.document = parseJsonOrText(text)
+      return result
     }
 
     throw new BlockedTargetError('Too many redirects while fetching the document.')
@@ -266,6 +284,42 @@ async function readLimited(response: Response): Promise<Buffer[]> {
   }
 
   return chunks
+}
+
+/**
+ * Only text and JSON payloads may be inlined into tool results, so a DID URI
+ * pointing at an image or other binary cannot flood an MCP client's context
+ * with up to 1MB of mangled bytes. A missing or bare content type is allowed
+ * through here and settled by the strict UTF-8 check on the actual bytes.
+ */
+export function isInlineableContentType(contentType?: string): boolean {
+  if (contentType === undefined) {
+    return true
+  }
+  const mime = contentType.split(';')[0].trim().toLowerCase()
+  if (mime === '') {
+    return true
+  }
+  return (
+    mime.startsWith('text/') ||
+    mime === 'application/json' ||
+    mime.endsWith('+json')
+  )
+}
+
+/**
+ * Decode a buffer as UTF-8, returning undefined for anything that is not
+ * clean text (invalid UTF-8 sequences or embedded NUL bytes).
+ */
+export function decodeUtf8Strict(buffer: Buffer): string | undefined {
+  if (buffer.includes(0)) {
+    return undefined
+  }
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buffer)
+  } catch {
+    return undefined
+  }
 }
 
 function parseJsonOrText(text: string): unknown {
