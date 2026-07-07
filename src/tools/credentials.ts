@@ -47,6 +47,8 @@ export function registerCredentialTools(server: McpServer): void {
           .describe('Optional ISO-8601 expiration time converted to Ripple epoch seconds.'),
         uri: z
           .string()
+          .trim()
+          .min(1, 'uri must not be empty or whitespace-only')
           .optional()
           .describe('Optional credential URI encoded as XRPL hex URI.'),
       },
@@ -170,7 +172,11 @@ export async function prepareCredentialCreate(
   }
 
   if (args.uri !== undefined) {
-    transaction.URI = utf8ToHex(args.uri)
+    const uri = args.uri.trim()
+    if (uri.length === 0) {
+      throw new Error('uri must not be empty or whitespace-only.')
+    }
+    transaction.URI = utf8ToHex(uri)
   }
 
   const unsignedTx = await prepareUnsignedTransaction(client, transaction)
@@ -264,10 +270,12 @@ export async function verifyCredential(
   try {
     const response = await client.request<{ result: { node: JsonRecord } }>({
       command: 'ledger_entry',
+      // rippled's ledger_entry credential API is snake_case: issuer, subject,
+      // credential_type. camelCase credentialType -> malformedRequest.
       credential: {
         issuer: args.issuer,
         subject: args.subject,
-        credentialType,
+        credential_type: credentialType,
       },
       ledger_index: 'validated',
     })

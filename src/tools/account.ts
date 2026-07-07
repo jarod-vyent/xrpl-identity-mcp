@@ -20,7 +20,7 @@ export function registerAccountTools(server: McpServer): void {
     {
       title: 'Account Identity Summary',
       description:
-        'Summarize an XRPL account identity posture: AccountRoot auth flags, RegularKey and Domain state, signer list, DID presence, and visible credential counts as issuer and subject.',
+        'Summarize an XRPL account identity posture: AccountRoot auth flags, RegularKey and Domain state, signer list, DID presence, and visible credential counts as issuer and subject (each with a *Truncated boolean flagging when the count hit the 400-object scan cap).',
       inputSchema: {
         address: addressSchema.describe('Classic XRPL account address to summarize.'),
       },
@@ -77,7 +77,9 @@ export async function accountIdentitySummary(
     did,
     credentialCounts: {
       issuer: issuerCredentials.count,
+      issuerTruncated: issuerCredentials.truncated === true,
       subject: subjectCredentials.count,
+      subjectTruncated: subjectCredentials.truncated === true,
     },
     ledgerIndex: accountInfo.result.ledger_index,
     validated: accountInfo.result.validated,

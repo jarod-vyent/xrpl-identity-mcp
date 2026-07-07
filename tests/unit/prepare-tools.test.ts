@@ -139,4 +139,48 @@ describe('prepare tools', () => {
       }),
     ).rejects.toThrow('credentialType must be 64 bytes or fewer')
   })
+
+  describe('empty-string field guards (finding 3)', () => {
+    it('rejects did_prepare_set when every field is empty', async () => {
+      await expect(
+        prepareDidSet(mockClient(), { account: ACCOUNT, uri: '' }),
+      ).rejects.toThrow('non-empty content')
+    })
+
+    it('rejects did_prepare_set when every field is whitespace-only', async () => {
+      await expect(
+        prepareDidSet(mockClient(), {
+          account: ACCOUNT,
+          uri: '   ',
+          data: '\t\n',
+          didDocument: ' ',
+        }),
+      ).rejects.toThrow('non-empty content')
+    })
+
+    it('ignores an empty field but still builds a DIDSet from a non-empty one', async () => {
+      const result = await prepareDidSet(mockClient(), {
+        account: ACCOUNT,
+        uri: '',
+        data: 'profile',
+      })
+
+      const tx = result.unsignedTx as Record<string, unknown>
+      expect(tx.TransactionType).toBe('DIDSet')
+      expect(tx.Data).toBe(utf8ToHex('profile'))
+      // The empty URI must not be encoded into an (invalid) empty hex field.
+      expect(tx.URI).toBeUndefined()
+    })
+
+    it('rejects credential_prepare_create with an empty uri', async () => {
+      await expect(
+        prepareCredentialCreate(mockClient(), {
+          issuerAccount: ACCOUNT,
+          subject: SUBJECT,
+          credentialType: 'KYC',
+          uri: '',
+        }),
+      ).rejects.toThrow('uri must not be empty')
+    })
+  })
 })

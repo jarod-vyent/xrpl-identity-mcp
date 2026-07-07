@@ -16,14 +16,26 @@ import {
   type JsonRecord,
 } from './common.js'
 
+function nonEmptyOptionalString(description: string) {
+  return z
+    .string()
+    .trim()
+    .min(1, 'must not be empty or whitespace-only')
+    .optional()
+    .describe(description)
+}
+
 const didSetSchema = {
   account: addressSchema.describe('Classic XRPL account address setting the DID.'),
-  uri: z.string().optional().describe('Optional DID document URI. UTF-8 encoded to XRPL hex URI.'),
-  data: z.string().optional().describe('Optional DID data. UTF-8 encoded to XRPL hex Data.'),
-  didDocument: z
-    .string()
-    .optional()
-    .describe('Optional DID document JSON/string payload. UTF-8 encoded to XRPL hex DIDDocument.'),
+  uri: nonEmptyOptionalString('Optional DID document URI. UTF-8 encoded to XRPL hex URI.'),
+  data: nonEmptyOptionalString('Optional DID data. UTF-8 encoded to XRPL hex Data.'),
+  didDocument: nonEmptyOptionalString(
+    'Optional DID document JSON/string payload. UTF-8 encoded to XRPL hex DIDDocument.',
+  ),
+}
+
+function hasContent(value: string | undefined): value is string {
+  return value !== undefined && value.trim().length > 0
 }
 
 export function registerDidTools(server: McpServer): void {
@@ -140,11 +152,13 @@ export async function prepareDidSet(
 ): Promise<JsonRecord> {
   assertClassicAddress(args.account, 'account')
   if (
-    args.uri === undefined &&
-    args.data === undefined &&
-    args.didDocument === undefined
+    !hasContent(args.uri) &&
+    !hasContent(args.data) &&
+    !hasContent(args.didDocument)
   ) {
-    throw new Error('At least one of uri, data, or didDocument is required.')
+    throw new Error(
+      'At least one of uri, data, or didDocument must have non-empty content.',
+    )
   }
 
   const transaction: DIDSet = {
@@ -152,14 +166,14 @@ export async function prepareDidSet(
     Account: args.account,
   }
 
-  if (args.uri !== undefined) {
-    transaction.URI = utf8ToHex(args.uri)
+  if (hasContent(args.uri)) {
+    transaction.URI = utf8ToHex(args.uri.trim())
   }
-  if (args.data !== undefined) {
-    transaction.Data = utf8ToHex(args.data)
+  if (hasContent(args.data)) {
+    transaction.Data = utf8ToHex(args.data.trim())
   }
-  if (args.didDocument !== undefined) {
-    transaction.DIDDocument = utf8ToHex(args.didDocument)
+  if (hasContent(args.didDocument)) {
+    transaction.DIDDocument = utf8ToHex(args.didDocument.trim())
   }
 
   const unsignedTx = await prepareUnsignedTransaction(client, transaction)
