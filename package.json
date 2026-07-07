@@ -29,7 +29,10 @@
   ],
   "author": "Jarod Vyent",
   "license": "MIT",
-  "repository": "github:jarod-vyent/xrpl-identity-mcp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jarod-vyent/xrpl-identity-mcp.git"
+  },
   "engines": {
     "node": ">=18"
   },
