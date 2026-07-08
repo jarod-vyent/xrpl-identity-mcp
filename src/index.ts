@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
@@ -14,7 +15,7 @@ import { registerTransactionTools } from './tools/tx.js'
 export function createServer(): McpServer {
   const server = new McpServer({
     name: 'xrpl-identity-mcp',
-    version: '0.1.0',
+    version: '0.1.2',
   })
 
   registerDidTools(server)
@@ -44,10 +45,26 @@ export async function main(): Promise<void> {
   })
 }
 
-if (
-  process.argv[1] !== undefined &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
+/**
+ * True when this module is the process entry point. npm installs the bin as a
+ * symlink (node_modules/.bin/xrpl-identity-mcp -> dist/index.js) while
+ * import.meta.url is the symlink-resolved path, so argv[1] must be
+ * realpath'd before comparing or the npx/global-install invocation
+ * silently never starts the server.
+ */
+function isDirectInvocation(): boolean {
+  const invoked = process.argv[1]
+  if (invoked === undefined) {
+    return false
+  }
+  try {
+    return import.meta.url === pathToFileURL(realpathSync(invoked)).href
+  } catch {
+    return false
+  }
+}
+
+if (isDirectInvocation()) {
   main().catch((error: unknown) => {
     const message = error instanceof Error ? error.stack ?? error.message : String(error)
     process.stderr.write(`${message}\n`)
