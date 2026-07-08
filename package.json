@@ -1,6 +1,7 @@
 {
   "name": "xrpl-identity-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "mcpName": "io.github.jarod-vyent/xrpl-identity-mcp",
   "description": "Identity-focused MCP server for XRPL DIDs, credentials, signer lists, and safe transaction workflows.",
   "type": "module",
   "main": "dist/index.js",

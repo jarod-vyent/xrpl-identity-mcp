@@ -1,0 +1,43 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.jarod-vyent/xrpl-identity-mcp",
+  "description": "MCP server for XRPL identity: DIDs, credentials, signer lists, and safe transaction workflows.",
+  "repository": {
+    "url": "https://github.com/jarod-vyent/xrpl-identity-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "xrpl-identity-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "XRPL network to target: mainnet, testnet, or devnet (default: testnet)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "XRPL_NETWORK"
+        },
+        {
+          "description": "Custom XRPL websocket endpoint override (default: public endpoint for the selected network)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "XRPL_ENDPOINT"
+        },
+        {
+          "description": "Must be set to 'true' to allow tx_submit_signed on mainnet (default: blocked)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "ALLOW_MAINNET_SUBMIT"
+        }
+      ]
+    }
+  ]
+}
